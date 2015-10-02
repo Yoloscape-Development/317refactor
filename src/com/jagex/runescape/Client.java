@@ -629,35 +629,28 @@ public final class Client extends RSApplet {
 
 	public static void main(String args[]) {
 		try {
-			System.out.println("RS2 user client - release #" + 317);
-
-			if (args.length != 5) {
-				System.out.println("Usage: node-id, port-offset, [lowmem/highmem], [free/members], storeid");
-				return;
-			}
-			localWorldId = Integer.parseInt(args[0]);
-			portOffset = Integer.parseInt(args[1]);
-			if (args[2].equals("lowmem"))
+			System.out.println("RS2 user client - release #" + signlink.clientversion);
+			
+			localWorldId = args.length >= 1 ? Integer.parseInt(args[0]) : 10;
+			portOffset = args.length >= 2 ? Integer.parseInt(args[1]) : 0;
+			
+			if (args.length >= 3 && args[2].equalsIgnoreCase("lowmem"))
 				setLowMemory();
-			else if (args[2].equals("highmem")) {
+			if (args.length >= 3 && args[2].equalsIgnoreCase("highmem"))
 				setHighMem();
-			} else {
-				System.out.println("Usage: node-id, port-offset, [lowmem/highmem], [free/members], storeid");
-				return;
-			}
-			if (args[3].equals("free"))
+			
+			if (args.length >= 4 && args[3].equalsIgnoreCase("free"))
 				membersWorld = false;
-			else if (args[3].equals("members")) {
+			if (args.length >= 4 && args[3].equalsIgnoreCase("members"))
 				membersWorld = true;
-			} else {
-				System.out.println("Usage: node-id, port-offset, [lowmem/highmem], [free/members], storeid");
-				return;
-			}
-			signlink.storeid = Integer.parseInt(args[4]);
+			
+			signlink.storeid = args.length >= 5 ? Integer.parseInt(args[4]) : 32;
 			signlink.startpriv(InetAddress.getLocalHost());
+			
 			Client client1 = new Client();
 			client1.createClientFrame(765, 503);
 		} catch (Exception exception) {
+			System.out.println("Usage: node-id, port-offset, [lowmem/highmem], [free/members], storeid");
 		}
 	}
 
