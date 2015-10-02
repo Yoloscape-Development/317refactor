@@ -43,6 +43,79 @@ public final class ISAACRandomGenerator {
 	}
 
 	/**
+	 * Generate 256 random results.
+	 */
+	public final void isaac() {
+		int a, b, x, y;
+
+		lastResult += ++counter;
+		for (a = 0, b = SIZE / 2; a < SIZE / 2;) {
+			x = memory[a];
+			accumulator ^= accumulator << 13;
+			accumulator += memory[b++];
+			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
+			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
+
+			x = memory[a];
+			accumulator ^= accumulator >>> 6;
+			accumulator += memory[b++];
+			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
+			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
+
+			x = memory[a];
+			accumulator ^= accumulator << 2;
+			accumulator += memory[b++];
+			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
+			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
+
+			x = memory[a];
+			accumulator ^= accumulator >>> 16;
+			accumulator += memory[b++];
+			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
+			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
+		}
+
+		for (b = 0; b < SIZE / 2;) {
+			x = memory[a];
+			accumulator ^= accumulator << 13;
+			accumulator += memory[b++];
+			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
+			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
+
+			x = memory[a];
+			accumulator ^= accumulator >>> 6;
+			accumulator += memory[b++];
+			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
+			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
+
+			x = memory[a];
+			accumulator ^= accumulator << 2;
+			accumulator += memory[b++];
+			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
+			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
+
+			x = memory[a];
+			accumulator ^= accumulator >>> 16;
+			accumulator += memory[b++];
+			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
+			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
+		}
+	}
+
+	/**
+	 * Get a random value.
+	 * 
+	 * @return A random value
+	 */
+	public int value() {
+		if (count-- == 0) {
+			isaac();
+			count = (SIZE - 1);
+		}
+		return results[count];
+	}
+
+	/**
 	 * Initialise or reinitialise the generator.
 	 */
 	private void initialise() {
@@ -163,78 +236,5 @@ public final class ISAACRandomGenerator {
 
 		isaac();
 		count = SIZE;
-	}
-
-	/**
-	 * Generate 256 random results.
-	 */
-	public final void isaac() {
-		int a, b, x, y;
-
-		lastResult += ++counter;
-		for (a = 0, b = SIZE / 2; a < SIZE / 2;) {
-			x = memory[a];
-			accumulator ^= accumulator << 13;
-			accumulator += memory[b++];
-			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
-			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
-
-			x = memory[a];
-			accumulator ^= accumulator >>> 6;
-			accumulator += memory[b++];
-			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
-			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
-
-			x = memory[a];
-			accumulator ^= accumulator << 2;
-			accumulator += memory[b++];
-			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
-			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
-
-			x = memory[a];
-			accumulator ^= accumulator >>> 16;
-			accumulator += memory[b++];
-			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
-			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
-		}
-
-		for (b = 0; b < SIZE / 2;) {
-			x = memory[a];
-			accumulator ^= accumulator << 13;
-			accumulator += memory[b++];
-			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
-			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
-
-			x = memory[a];
-			accumulator ^= accumulator >>> 6;
-			accumulator += memory[b++];
-			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
-			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
-
-			x = memory[a];
-			accumulator ^= accumulator << 2;
-			accumulator += memory[b++];
-			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
-			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
-
-			x = memory[a];
-			accumulator ^= accumulator >>> 16;
-			accumulator += memory[b++];
-			memory[a] = y = memory[(x & MASK) >> 2] + accumulator + lastResult;
-			results[a++] = lastResult = memory[((y >> SIZEL) & MASK) >> 2] + x;
-		}
-	}
-
-	/**
-	 * Get a random value.
-	 * 
-	 * @return A random value
-	 */
-	public int value() {
-		if (count-- == 0) {
-			isaac();
-			count = (SIZE - 1);
-		}
-		return results[count];
 	}
 }

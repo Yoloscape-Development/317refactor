@@ -18,9 +18,14 @@ package com.jagex.runescape;
 /* 
  * This file was renamed as part of the 317refactor project.
  */
-
-import java.awt.*;
-import java.awt.image.*;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.image.ColorModel;
+import java.awt.image.DirectColorModel;
+import java.awt.image.ImageConsumer;
+import java.awt.image.ImageObserver;
+import java.awt.image.ImageProducer;
 
 final class RSImageProducer implements ImageProducer, ImageObserver {
 
@@ -65,36 +70,40 @@ final class RSImageProducer implements ImageProducer, ImageObserver {
 		g.drawImage(image, x, y, this);
 	}
 
-	private synchronized void drawPixels() {
-		if (imageConsumer != null) {
-			imageConsumer.setPixels(0, 0, width, height, colourModel, pixels,
-					0, width);
-			imageConsumer.imageComplete(2);
-		}
-	}
-
 	@Override
 	public boolean imageUpdate(Image image, int i, int j, int k, int l, int i1) {
 		return true;
 	}
+
 	public void initDrawingArea() {
 		DrawingArea.initDrawingArea(height, width, pixels);
 	}
+
 	@Override
 	public synchronized boolean isConsumer(ImageConsumer imageconsumer) {
 		return imageConsumer == imageconsumer;
 	}
+
 	@Override
 	public synchronized void removeConsumer(ImageConsumer imageconsumer) {
 		if (imageConsumer == imageconsumer)
 			imageConsumer = null;
 	}
+
 	@Override
 	public void requestTopDownLeftRightResend(ImageConsumer imageconsumer) {
 		System.out.println("TDLR");
 	}
+
 	@Override
 	public void startProduction(ImageConsumer imageconsumer) {
 		addConsumer(imageconsumer);
+	}
+
+	private synchronized void drawPixels() {
+		if (imageConsumer != null) {
+			imageConsumer.setPixels(0, 0, width, height, colourModel, pixels, 0, width);
+			imageConsumer.imageComplete(2);
+		}
 	}
 }

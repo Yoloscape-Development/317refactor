@@ -21,6 +21,69 @@ package com.jagex.runescape;
 
 public final class GameObjectDefinition {
 
+	private static final Model[] models = new Model[4];
+
+	public static boolean lowMemory;
+
+	private static Buffer stream;
+
+	private static int[] streamOffsets;
+
+	public static Client clientInstance;
+
+	private static int cacheIndex;
+
+	public static LinkedList animatedModelCache = new LinkedList(30);
+
+	private static GameObjectDefinition[] cache;
+
+	public static LinkedList modelCache = new LinkedList(500);
+
+	public boolean unknownAttribute;
+
+	private byte ambient;
+
+	private int translateX;
+
+	public String name;
+	private int scaleZ;
+	private byte diffuse;
+	public int sizeX;
+	private int translateY;
+	public int icon;
+	private int[] originalModelColors;
+	private int scaleX;
+	public int configIds;
+	private boolean rotated;
+	public int id;
+	public boolean walkable;
+	public int mapScene;
+	public int childIds[];
+	private int _solid;
+	public int sizeY;
+	public boolean adjustToTerrain;
+	public boolean wall;
+	private boolean unwalkableSolid;
+	public boolean solid;
+	public int face;
+	private boolean delayShading;
+	private int scaleY;
+	private int[] modelIds;
+	public int varBitId;
+	public int offsetAmplifier;
+	private int[] modelTypes;
+	public byte description[];
+	public boolean hasActions;
+	public boolean castsShadow;
+	public int animationId;
+	private int translateZ;
+	private int[] modifiedModelColors;
+	public String actions[];
+
+	private GameObjectDefinition() {
+		id = -1;
+	}
+
 	public static GameObjectDefinition getDefinition(int objectId) {
 		for (int c = 0; c < 20; c++)
 			if (cache[c].id == objectId)
@@ -60,64 +123,80 @@ public final class GameObjectDefinition {
 		stream = null;
 	}
 
-	public boolean unknownAttribute;
-
-	private byte ambient;
-
-	private int translateX;
-
-	public String name;
-
-	private int scaleZ;
-
-	private static final Model[] models = new Model[4];
-
-	private byte diffuse;
-
-	public int sizeX;
-
-	private int translateY;
-
-	public int icon;
-	private int[] originalModelColors;
-	private int scaleX;
-	public int configIds;
-	private boolean rotated;
-	public static boolean lowMemory;
-	private static Buffer stream;
-	public int id;
-	private static int[] streamOffsets;
-	public boolean walkable;
-	public int mapScene;
-	public int childIds[];
-	private int _solid;
-	public int sizeY;
-	public boolean adjustToTerrain;
-	public boolean wall;
-	public static Client clientInstance;
-	private boolean unwalkableSolid;
-	public boolean solid;
-	public int face;
-	private boolean delayShading;
-	private static int cacheIndex;
-	private int scaleY;
-	private int[] modelIds;
-	public int varBitId;
-	public int offsetAmplifier;
-	private int[] modelTypes;
-	public byte description[];
-	public boolean hasActions;
-	public boolean castsShadow;
-	public static LinkedList animatedModelCache = new LinkedList(30);
-	public int animationId;
-	private static GameObjectDefinition[] cache;
-	private int translateZ;
-	private int[] modifiedModelColors;
-	public static LinkedList modelCache = new LinkedList(500);
-	public String actions[];
-	private GameObjectDefinition() {
-		id = -1;
+	public GameObjectDefinition getChildDefinition() {
+		int child = -1;
+		if (varBitId != -1) {
+			VarBit varBit = VarBit.cache[varBitId];
+			int configId = varBit.configId;
+			int lsb = varBit.leastSignificantBit;
+			int msb = varBit.mostSignificantBit;
+			int bit = Client.BITFIELD_MAX_VALUE[msb - lsb];
+			child = clientInstance.interfaceSettings[configId] >> lsb & bit;
+		} else if (configIds != -1)
+			child = clientInstance.interfaceSettings[configIds];
+		if (child < 0 || child >= childIds.length || childIds[child] == -1)
+			return null;
+		else
+			return getDefinition(childIds[child]);
 	}
+
+	public Model getModelAt(int i, int j, int k, int l, int i1, int j1, int k1) {
+		Model model = getAnimatedModel(i, k1, j);
+		if (model == null)
+			return null;
+		if (adjustToTerrain || delayShading)
+			model = new Model(adjustToTerrain, delayShading, model);
+		if (adjustToTerrain) {
+			int l1 = (k + l + i1 + j1) / 4;
+			for (int v = 0; v < model.vertexCount; v++) {
+				int x = model.verticesX[v];
+				int z = model.verticesZ[v];
+				int l2 = k + ((l - k) * (x + 64)) / 128;
+				int i3 = j1 + ((i1 - j1) * (x + 64)) / 128;
+				int j3 = l2 + ((i3 - l2) * (z + 64)) / 128;
+				model.verticesY[v] += j3 - l1;
+			}
+
+			model.normalise();
+		}
+		return model;
+	}
+
+	public boolean modelCached() {
+		if (modelIds == null)
+			return true;
+		boolean cached = true;
+		for (int m = 0; m < modelIds.length; m++)
+			cached &= Model.isCached(modelIds[m] & 0xffff);
+		return cached;
+	}
+
+	public boolean modelTypeCached(int modelType) {
+		if (modelTypes == null) {
+			if (modelIds == null)
+				return true;
+			if (modelType != 10)
+				return true;
+			boolean cached = true;
+			for (int id = 0; id < modelIds.length; id++)
+				cached &= Model.isCached(modelIds[id] & 0xffff);
+
+			return cached;
+		}
+		for (int type = 0; type < modelTypes.length; type++)
+			if (modelTypes[type] == modelType)
+				return Model.isCached(modelIds[type] & 0xffff);
+
+		return true;
+	}
+
+	public void passivelyRequestModels(OnDemandFetcher requester) {
+		if (modelIds == null)
+			return;
+		for (int modelId = 0; modelId < modelIds.length; modelId++)
+			requester.passiveRequest(modelIds[modelId] & 0xffff, 0);
+	}
+
 	private Model getAnimatedModel(int type, int animationId, int face) {
 		Model subModel = null;
 		long hash;
@@ -162,8 +241,7 @@ public final class GameObjectDefinition {
 
 			if (modelType == -1)
 				return null;
-			hash = (id << 6) + (modelType << 3) + face
-					+ ((long) (animationId + 1) << 32);
+			hash = (id << 6) + (modelType << 3) + face + ((long) (animationId + 1) << 32);
 			Model model = (Model) animatedModelCache.get(hash);
 			if (model != null)
 				return model;
@@ -185,9 +263,8 @@ public final class GameObjectDefinition {
 		scale = scaleX != 128 || scaleY != 128 || scaleZ != 128;
 		boolean translate;
 		translate = translateX != 0 || translateY != 0 || translateZ != 0;
-		Model animatedModel = new Model(modifiedModelColors == null,
-				Animation.isNullFrame(animationId), face == 0
-						&& animationId == -1 && !scale && !translate, subModel);
+		Model animatedModel = new Model(modifiedModelColors == null, Animation.isNullFrame(animationId),
+				face == 0 && animationId == -1 && !scale && !translate, subModel);
 		if (animationId != -1) {
 			animatedModel.createBones();
 			animatedModel.applyTransformation(animationId);
@@ -198,58 +275,20 @@ public final class GameObjectDefinition {
 			animatedModel.rotate90Degrees();
 		if (modifiedModelColors != null) {
 			for (int c = 0; c < modifiedModelColors.length; c++)
-				animatedModel.recolour(modifiedModelColors[c],
-						originalModelColors[c]);
+				animatedModel.recolour(modifiedModelColors[c], originalModelColors[c]);
 
 		}
 		if (scale)
 			animatedModel.scaleT(scaleX, scaleZ, scaleY);
 		if (translate)
 			animatedModel.translate(translateX, translateY, translateZ);
-		animatedModel.applyLighting(64 + ambient, 768 + diffuse * 5, -50, -10,
-				-50, !delayShading);
+		animatedModel.applyLighting(64 + ambient, 768 + diffuse * 5, -50, -10, -50, !delayShading);
 		if (_solid == 1)
 			animatedModel.anInt1654 = animatedModel.modelHeight;
 		animatedModelCache.put(animatedModel, hash);
 		return animatedModel;
 	}
-	public GameObjectDefinition getChildDefinition() {
-		int child = -1;
-		if (varBitId != -1) {
-			VarBit varBit = VarBit.cache[varBitId];
-			int configId = varBit.configId;
-			int lsb = varBit.leastSignificantBit;
-			int msb = varBit.mostSignificantBit;
-			int bit = Client.BITFIELD_MAX_VALUE[msb - lsb];
-			child = clientInstance.interfaceSettings[configId] >> lsb & bit;
-		} else if (configIds != -1)
-			child = clientInstance.interfaceSettings[configIds];
-		if (child < 0 || child >= childIds.length || childIds[child] == -1)
-			return null;
-		else
-			return getDefinition(childIds[child]);
-	}
-	public Model getModelAt(int i, int j, int k, int l, int i1, int j1, int k1) {
-		Model model = getAnimatedModel(i, k1, j);
-		if (model == null)
-			return null;
-		if (adjustToTerrain || delayShading)
-			model = new Model(adjustToTerrain, delayShading, model);
-		if (adjustToTerrain) {
-			int l1 = (k + l + i1 + j1) / 4;
-			for (int v = 0; v < model.vertexCount; v++) {
-				int x = model.verticesX[v];
-				int z = model.verticesZ[v];
-				int l2 = k + ((l - k) * (x + 64)) / 128;
-				int i3 = j1 + ((i1 - j1) * (x + 64)) / 128;
-				int j3 = l2 + ((i3 - l2) * (z + 64)) / 128;
-				model.verticesY[v] += j3 - l1;
-			}
 
-			model.normalise();
-		}
-		return model;
-	}
 	private void loadDefinition(Buffer stream) {
 		int _actions = -1;
 		label0: do {
@@ -380,8 +419,7 @@ public final class GameObjectDefinition {
 
 		} while (true);
 		if (_actions == -1) {
-			hasActions = modelIds != null
-					&& (modelTypes == null || modelTypes[0] == 10);
+			hasActions = modelIds != null && (modelTypes == null || modelTypes[0] == 10);
 			if (actions != null)
 				hasActions = true;
 		}
@@ -392,38 +430,7 @@ public final class GameObjectDefinition {
 		if (_solid == -1)
 			_solid = solid ? 1 : 0;
 	}
-	public boolean modelCached() {
-		if (modelIds == null)
-			return true;
-		boolean cached = true;
-		for (int m = 0; m < modelIds.length; m++)
-			cached &= Model.isCached(modelIds[m] & 0xffff);
-		return cached;
-	}
-	public boolean modelTypeCached(int modelType) {
-		if (modelTypes == null) {
-			if (modelIds == null)
-				return true;
-			if (modelType != 10)
-				return true;
-			boolean cached = true;
-			for (int id = 0; id < modelIds.length; id++)
-				cached &= Model.isCached(modelIds[id] & 0xffff);
 
-			return cached;
-		}
-		for (int type = 0; type < modelTypes.length; type++)
-			if (modelTypes[type] == modelType)
-				return Model.isCached(modelIds[type] & 0xffff);
-
-		return true;
-	}
-	public void passivelyRequestModels(OnDemandFetcher requester) {
-		if (modelIds == null)
-			return;
-		for (int modelId = 0; modelId < modelIds.length; modelId++)
-			requester.passiveRequest(modelIds[modelId] & 0xffff, 0);
-	}
 	private void setDefaults() {
 		modelIds = null;
 		modelTypes = null;

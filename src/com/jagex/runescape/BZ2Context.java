@@ -21,8 +21,9 @@ package com.jagex.runescape;
 
 final class BZ2Context {
 
-	byte aByteArray563[];
+	public static int anIntArray587[];
 
+	byte aByteArray563[];
 	int anInt564;
 	int anInt565;
 	int anInt566;
@@ -45,7 +46,6 @@ final class BZ2Context {
 	final int[] anIntArray583;
 	int anInt584;
 	final int[] anIntArray585;
-	public static int anIntArray587[];
 	int nInUse;
 	final boolean[] inUse;
 	final boolean[] inUse16;
@@ -60,6 +60,7 @@ final class BZ2Context {
 	final int[][] anIntArrayArray599;
 	final int[] anIntArray600;
 	int anInt601;
+
 	BZ2Context() {
 		anIntArray583 = new int[256];
 		anIntArray585 = new int[257];

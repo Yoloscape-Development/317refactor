@@ -31,17 +31,6 @@ final class NodeList {
 		head.next = head;
 	}
 
-	public Link peekLast() {
-		Link node = head.previous;
-		if (node == head) {
-			current = null;
-			return null;
-		} else {
-			current = node.previous;
-			return node;
-		}
-	}
-
 	public Link getFirst() {
 		Link node = head.next;
 		if (node == head) {
@@ -81,6 +70,17 @@ final class NodeList {
 		node.previous.next = node;
 	}
 
+	public Link peekLast() {
+		Link node = head.previous;
+		if (node == head) {
+			current = null;
+			return null;
+		} else {
+			current = node.previous;
+			return node;
+		}
+	}
+
 	public Link popHead() {
 		Link node = head.previous;
 		if (node == head) {
@@ -101,6 +101,7 @@ final class NodeList {
 			node.unlink();
 		} while (true);
 	}
+
 	public Link reverseGetNext() {
 		Link node = current;
 		if (node == head) {

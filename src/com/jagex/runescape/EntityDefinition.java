@@ -21,6 +21,68 @@ package com.jagex.runescape;
 
 public final class EntityDefinition {
 
+	private static int bufferIndex;
+
+	private static Buffer stream;
+
+	private static int[] streamOffsets;
+
+	private static EntityDefinition[] cache;
+
+	public static Client clientInstance;
+
+	public static LinkedList modelCache = new LinkedList(30);
+
+	public int turnLeftAnimationId;
+
+	private int varBitId;
+
+	public int turnAboutAnimationId;
+	private int settingId;
+	public int combatLevel;
+	public String name;
+	public String actions[];
+	public int walkAnimationId;
+	public byte boundaryDimension;
+	private int[] originalModelColours;
+	private int[] headModelIds;
+	public int headIcon;
+	private int[] modifiedModelColours;
+	public int standAnimationId;
+	public long id;
+	public int degreesToTurn;
+	public int turnRightAnimationId;
+	public boolean clickable;
+	private int brightness;
+	private int scaleZ;
+	public boolean visibleMinimap;
+	public int childrenIDs[];
+	public byte description[];
+	private int scaleXY;
+	private int contrast;
+	public boolean visible;
+	private int[] modelIds;
+
+	private EntityDefinition() {
+		turnLeftAnimationId = -1;
+		varBitId = -1;
+		turnAboutAnimationId = -1;
+		settingId = -1;
+		combatLevel = -1;
+		walkAnimationId = -1;
+		boundaryDimension = 1;
+		headIcon = -1;
+		standAnimationId = -1;
+		id = -1L;
+		degreesToTurn = 32;
+		turnRightAnimationId = -1;
+		clickable = true;
+		scaleZ = 128;
+		visibleMinimap = true;
+		scaleXY = 128;
+		visible = false;
+	}
+
 	public static EntityDefinition getDefinition(int id) {
 		for (int c = 0; c < 20; c++)
 			if (EntityDefinition.cache[c].id == id)
@@ -58,63 +120,6 @@ public final class EntityDefinition {
 		stream = null;
 	}
 
-	public int turnLeftAnimationId;
-
-	private static int bufferIndex;
-
-	private int varBitId;
-
-	public int turnAboutAnimationId;
-
-	private int settingId;
-
-	private static Buffer stream;
-	public int combatLevel;
-	public String name;
-	public String actions[];
-	public int walkAnimationId;
-	public byte boundaryDimension;
-	private int[] originalModelColours;
-	private static int[] streamOffsets;
-	private int[] headModelIds;
-	public int headIcon;
-	private int[] modifiedModelColours;
-	public int standAnimationId;
-	public long id;
-	public int degreesToTurn;
-	private static EntityDefinition[] cache;
-	public static Client clientInstance;
-	public int turnRightAnimationId;
-	public boolean clickable;
-	private int brightness;
-	private int scaleZ;
-	public boolean visibleMinimap;
-	public int childrenIDs[];
-	public byte description[];
-	private int scaleXY;
-	private int contrast;
-	public boolean visible;
-	private int[] modelIds;
-	public static LinkedList modelCache = new LinkedList(30);
-	private EntityDefinition() {
-		turnLeftAnimationId = -1;
-		varBitId = -1;
-		turnAboutAnimationId = -1;
-		settingId = -1;
-		combatLevel = -1;
-		walkAnimationId = -1;
-		boundaryDimension = 1;
-		headIcon = -1;
-		standAnimationId = -1;
-		id = -1L;
-		degreesToTurn = 32;
-		turnRightAnimationId = -1;
-		clickable = true;
-		scaleZ = 128;
-		visibleMinimap = true;
-		scaleXY = 128;
-		visible = false;
-	}
 	public EntityDefinition getChildDefinition() {
 		int childId = -1;
 		if (varBitId != -1) {
@@ -126,20 +131,19 @@ public final class EntityDefinition {
 			childId = clientInstance.interfaceSettings[configId] >> lsb & bit;
 		} else if (settingId != -1)
 			childId = clientInstance.interfaceSettings[settingId];
-		if (childId < 0 || childId >= childrenIDs.length
-				|| childrenIDs[childId] == -1)
+		if (childId < 0 || childId >= childrenIDs.length || childrenIDs[childId] == -1)
 			return null;
 		else
 			return getDefinition(childrenIDs[childId]);
 	}
+
 	public Model getChildModel(int frameId2, int frameId1, int framesFrom2[]) {
 		if (childrenIDs != null) {
 			EntityDefinition childDefinition = getChildDefinition();
 			if (childDefinition == null)
 				return null;
 			else
-				return childDefinition.getChildModel(frameId2, frameId1,
-						framesFrom2);
+				return childDefinition.getChildModel(frameId2, frameId1, framesFrom2);
 		}
 		Model model = (Model) modelCache.get(id);
 		if (model == null) {
@@ -160,18 +164,15 @@ public final class EntityDefinition {
 				model = new Model(childModels.length, childModels);
 			if (modifiedModelColours != null) {
 				for (int c = 0; c < modifiedModelColours.length; c++)
-					model.recolour(modifiedModelColours[c],
-							originalModelColours[c]);
+					model.recolour(modifiedModelColours[c], originalModelColours[c]);
 
 			}
 			model.createBones();
-			model.applyLighting(64 + brightness, 850 + contrast, -30, -50, -30,
-					true);
+			model.applyLighting(64 + brightness, 850 + contrast, -30, -50, -30, true);
 			modelCache.put(model, id);
 		}
 		Model childModel = Model.aModel_1621;
-		childModel.replaceWithModel(model, Animation.isNullFrame(frameId1)
-				& Animation.isNullFrame(frameId2));
+		childModel.replaceWithModel(model, Animation.isNullFrame(frameId1) & Animation.isNullFrame(frameId2));
 		if (frameId1 != -1 && frameId2 != -1)
 			childModel.mixAnimationFrames(framesFrom2, frameId2, frameId1);
 		else if (frameId1 != -1)
@@ -185,6 +186,7 @@ public final class EntityDefinition {
 			childModel.singleTile = true;
 		return childModel;
 	}
+
 	public Model getHeadModel() {
 		if (childrenIDs != null) {
 			EntityDefinition definition = getChildDefinition();
@@ -213,12 +215,12 @@ public final class EntityDefinition {
 			headModel = new Model(headModels.length, headModels);
 		if (modifiedModelColours != null) {
 			for (int c = 0; c < modifiedModelColours.length; c++)
-				headModel.recolour(modifiedModelColours[c],
-						originalModelColours[c]);
+				headModel.recolour(modifiedModelColours[c], originalModelColours[c]);
 
 		}
 		return headModel;
 	}
+
 	private void loadDefinition(Buffer stream) {
 		do {
 			int attributeType = stream.getUnsignedByte();

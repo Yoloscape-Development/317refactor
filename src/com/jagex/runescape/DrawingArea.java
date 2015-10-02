@@ -21,6 +21,29 @@ package com.jagex.runescape;
 
 public class DrawingArea extends QueueLink {
 
+	public static int pixels[];
+
+	public static int width;
+
+	public static int height;
+
+	public static int topY;
+
+	public static int bottomY;
+
+	public static int topX;
+
+	public static int bottomX;
+
+	public static int centerX;
+
+	public static int viewportCentreX;
+
+	public static int viewportCentreY;
+
+	DrawingArea() {
+	}
+
 	public static void clear() {
 		int i = width * height;
 		for (int j = 0; j < i; j++)
@@ -37,8 +60,21 @@ public class DrawingArea extends QueueLink {
 		viewportCentreX = bottomX / 2;
 	}
 
-	public static void drawFilledRectangle(int x, int y, int width, int height,
-			int colour) {
+	public static void drawFilledCircle(int x, int y, int radius, int colour) {
+		for (int _y = -radius; _y <= radius; _y++)
+			for (int _x = -radius; _x <= radius; _x++)
+				if (_x * _x + _y * _y <= radius * radius)
+					drawHorizontalLine(_x + x, _y + y, 1, colour);
+	}
+
+	public static void drawFilledCircleAlpha(int x, int y, int radius, int colour, int alpha) {
+		for (int _y = -radius; _y <= radius; _y++)
+			for (int _x = -radius; _x <= radius; _x++)
+				if (_x * _x + _y * _y <= radius * radius)
+					drawHorizontalLineAlpha(_x + x, _y + y, 1, colour, alpha);
+	}
+
+	public static void drawFilledRectangle(int x, int y, int width, int height, int colour) {
 		if (x < topX) {
 			width -= topX - x;
 			x = topX;
@@ -61,22 +97,7 @@ public class DrawingArea extends QueueLink {
 		}
 	}
 
-	public static void drawFilledCircle(int x, int y, int radius, int colour) {
-		for(int _y = -radius; _y <= radius; _y++)
-		    for(int _x = -radius; _x <= radius; _x++)
-		        if(_x * _x + _y * _y <= radius * radius)
-		        	drawHorizontalLine(_x + x, _y + y, 1, colour);
-	}
-	
-	public static void drawFilledCircleAlpha(int x, int y, int radius, int colour, int alpha) {
-		for(int _y = -radius; _y <= radius; _y++)
-		    for(int _x = -radius; _x <= radius; _x++)
-		        if(_x * _x + _y * _y <= radius * radius)
-		        	drawHorizontalLineAlpha(_x + x, _y + y, 1, colour, alpha);
-	}
-
-	public static void drawFilledRectangleAlpha(int colour, int y, int width, int height,
-			int alpha, int x) {
+	public static void drawFilledRectangleAlpha(int colour, int y, int width, int height, int alpha, int x) {
 		if (x < topX) {
 			width -= topX - x;
 			x = topX;
@@ -100,8 +121,7 @@ public class DrawingArea extends QueueLink {
 				int l2 = (pixels[l3] >> 16 & 0xff) * l1;
 				int i3 = (pixels[l3] >> 8 & 0xff) * l1;
 				int j3 = (pixels[l3] & 0xff) * l1;
-				int packedRGB = ((i2 + l2 >> 8) << 16) + ((j2 + i3 >> 8) << 8)
-						+ (k2 + j3 >> 8);
+				int packedRGB = ((i2 + l2 >> 8) << 16) + ((j2 + i3 >> 8) << 8) + (k2 + j3 >> 8);
 				pixels[l3++] = packedRGB;
 			}
 
@@ -122,7 +142,7 @@ public class DrawingArea extends QueueLink {
 		for (int column = 0; column < width; column++)
 			pixels[pointer + column] = colour;
 	}
-	
+
 	public static void drawHorizontalLineAlpha(int x, int y, int width, int colour, int alpha) {
 		if (x < topY || x >= bottomY)
 			return;
@@ -141,8 +161,7 @@ public class DrawingArea extends QueueLink {
 			int rAlpha = (pixels[pointer + column] >> 16 & 0xff) * opacity;
 			int gAlpha = (pixels[pointer + column] >> 8 & 0xff) * opacity;
 			int bAlpha = (pixels[pointer + column] & 0xff) * opacity;
-			int packedRGB = ((r + rAlpha >> 8) << 16) + ((g + gAlpha >> 8) << 8)
-					+ (b + bAlpha >> 8);
+			int packedRGB = ((r + rAlpha >> 8) << 16) + ((g + gAlpha >> 8) << 8) + (b + bAlpha >> 8);
 			pixels[pointer + column] = packedRGB;
 		}
 	}
@@ -154,8 +173,7 @@ public class DrawingArea extends QueueLink {
 		drawVerticalLine((i + j) - 1, i1, k, l);
 	}
 
-	public static void drawUnfilledRectangleAlpha(int i, int j, int k, int l,
-			int i1, int j1) {
+	public static void drawUnfilledRectangleAlpha(int i, int j, int k, int l, int i1, int j1) {
 		method340(l, i1, i, k, j1);
 		method340(l, i1, (i + j) - 1, k, j1);
 		if (j >= 3) {
@@ -186,6 +204,24 @@ public class DrawingArea extends QueueLink {
 		setDrawingArea(height, 0, width, 0);
 	}
 
+	public static void setDrawingArea(int h, int j, int w, int l) {
+		if (j < 0)
+			j = 0;
+		if (l < 0)
+			l = 0;
+		if (w > width)
+			w = width;
+		if (h > height)
+			h = height;
+		topX = j;
+		topY = l;
+		bottomX = w;
+		bottomY = h;
+		centerX = bottomX - 1;
+		viewportCentreX = bottomX / 2;
+		viewportCentreY = bottomY / 2;
+	}
+
 	private static void method340(int i, int j, int k, int l, int i1) {
 		if (k < topY || k >= bottomY)
 			return;
@@ -204,8 +240,7 @@ public class DrawingArea extends QueueLink {
 			int j2 = (pixels[i3] >> 16 & 0xff) * j1;
 			int k2 = (pixels[i3] >> 8 & 0xff) * j1;
 			int l2 = (pixels[i3] & 0xff) * j1;
-			int k3 = ((k1 + j2 >> 8) << 16) + ((l1 + k2 >> 8) << 8)
-					+ (i2 + l2 >> 8);
+			int k3 = ((k1 + j2 >> 8) << 16) + ((l1 + k2 >> 8) << 8) + (i2 + l2 >> 8);
 			pixels[i3++] = k3;
 		}
 
@@ -229,44 +264,11 @@ public class DrawingArea extends QueueLink {
 			int j2 = (pixels[i3] >> 16 & 0xff) * j1;
 			int k2 = (pixels[i3] >> 8 & 0xff) * j1;
 			int l2 = (pixels[i3] & 0xff) * j1;
-			int k3 = ((k1 + j2 >> 8) << 16) + ((l1 + k2 >> 8) << 8)
-					+ (i2 + l2 >> 8);
+			int k3 = ((k1 + j2 >> 8) << 16) + ((l1 + k2 >> 8) << 8) + (i2 + l2 >> 8);
 			pixels[i3] = k3;
 			i3 += width;
 		}
 
-	}
-
-	public static void setDrawingArea(int h, int j, int w, int l) {
-		if (j < 0)
-			j = 0;
-		if (l < 0)
-			l = 0;
-		if (w > width)
-			w = width;
-		if (h > height)
-			h = height;
-		topX = j;
-		topY = l;
-		bottomX = w;
-		bottomY = h;
-		centerX = bottomX - 1;
-		viewportCentreX = bottomX / 2;
-		viewportCentreY = bottomY / 2;
-	}
-
-	public static int pixels[];
-
-	public static int width;
-	public static int height;
-	public static int topY;
-	public static int bottomY;
-	public static int topX;
-	public static int bottomX;
-	public static int centerX;
-	public static int viewportCentreX;
-	public static int viewportCentreY;
-	DrawingArea() {
 	}
 
 }

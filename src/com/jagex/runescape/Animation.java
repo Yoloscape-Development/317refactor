@@ -21,6 +21,24 @@ package com.jagex.runescape;
 
 public final class Animation {
 
+	private static Animation[] aClass36Array635;
+
+	private static boolean[] aBooleanArray643;
+
+	public int displayLength;
+
+	public Skins animationSkins;
+
+	public int frameCount;
+
+	public int opcodeTable[];
+	public int transformationX[];
+	public int transformationY[];
+	public int transformationZ[];
+
+	private Animation() {
+	}
+
 	public static Animation forFrameId(int j) {
 		if (aClass36Array635 == null)
 			return null;
@@ -132,15 +150,4 @@ public final class Animation {
 	public static void nullLoader() {
 		aClass36Array635 = null;
 	}
-
-	private static Animation[] aClass36Array635;
-	public int displayLength;
-	public Skins animationSkins;
-	public int frameCount;
-	public int opcodeTable[];
-	public int transformationX[];
-	public int transformationY[];
-	public int transformationZ[];
-	private static boolean[] aBooleanArray643;
-	private Animation() { }
 }

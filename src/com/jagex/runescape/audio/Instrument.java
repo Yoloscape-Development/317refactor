@@ -27,21 +27,7 @@ import com.jagex.runescape.Buffer;
 
 final class Instrument {
 
-	public static void initialise() {
-		noise = new int[32768];
-		for (int noiseId = 0; noiseId < 32768; noiseId++)
-			if (Math.random() > 0.5D)
-				noise[noiseId] = 1;
-			else
-				noise[noiseId] = -1;
-
-		sine = new int[32768];
-		for (int sineId = 0; sineId < 32768; sineId++)
-			sine[sineId] = (int) (Math
-					.sin(sineId / 5215.1903000000002D) * 16384D);
-
-		output = new int[0x35d54];
-	}
+	private static int[] output;
 
 	/*
 	 * an impl of a wavetable synthesizer that generates
@@ -51,14 +37,21 @@ final class Instrument {
 	 * more: http://musicdsp.org/files/Wavetable-101.pdf
 	 */
 
+	private static int[] noise;
+
+	private static int[] sine;
+
+	private static final int[] phases = new int[5];
+
+	private static final int[] delays = new int[5];
+
+	private static final int[] volumeStep = new int[5];
+	private static final int[] pitchStep = new int[5];
+	private static final int[] pitchBaseStep = new int[5];
 	private Envelope pitchEnvelope;
-
 	private Envelope volumeEnvelope;
-
 	private Envelope pitchModulationEnvelope;
-
 	private Envelope pitchModulationAmplitudeEnvelope;
-
 	private Envelope volumeModulationEnvelope;
 	private Envelope volumeModulationAmplitude;
 	private Envelope gatingReleaseEnvelope;
@@ -72,14 +65,7 @@ final class Instrument {
 	private Envelope filterEnvelope;
 	int duration;
 	int begin;
-	private static int[] output;
-	private static int[] noise;
-	private static int[] sine;
-	private static final int[] phases = new int[5];
-	private static final int[] delays = new int[5];
-	private static final int[] volumeStep = new int[5];
-	private static final int[] pitchStep = new int[5];
-	private static final int[] pitchBaseStep = new int[5];
+
 	public Instrument() {
 		oscillationVolume = new int[5];
 		oscillationPitch = new int[5];
@@ -87,6 +73,22 @@ final class Instrument {
 		delayFeedback = 100;
 		duration = 500;
 	}
+
+	public static void initialise() {
+		noise = new int[32768];
+		for (int noiseId = 0; noiseId < 32768; noiseId++)
+			if (Math.random() > 0.5D)
+				noise[noiseId] = 1;
+			else
+				noise[noiseId] = -1;
+
+		sine = new int[32768];
+		for (int sineId = 0; sineId < 32768; sineId++)
+			sine[sineId] = (int) (Math.sin(sineId / 5215.1903000000002D) * 16384D);
+
+		output = new int[0x35d54];
+	}
+
 	public void decode(Buffer stream) {
 		pitchEnvelope = new Envelope();
 		pitchEnvelope.decode(stream);
@@ -133,21 +135,7 @@ final class Instrument {
 		filterEnvelope = new Envelope();
 		filter.decode(stream, filterEnvelope);
 	}
-	private int evaluateWave(int amplitude, int phase, int table) {
-		if (table == 1)
-			if ((phase & 0x7fff) < 16384)
-				return amplitude;
-			else
-				return -amplitude;
-		if (table == 2)
-			return sine[phase & 0x7fff] * amplitude >> 14;
-		if (table == 3)
-			return ((phase & 0x7fff) * amplitude >> 14) - amplitude;
-		if (table == 4)
-			return noise[phase / 2607 & 0x7fff] * amplitude;
-		else
-			return 0;
-	}
+
 	public int[] synthesise(int steps, int j) {
 		for (int position = 0; position < steps; position++)
 			output[position] = 0;
@@ -163,7 +151,8 @@ final class Instrument {
 		if (pitchModulationEnvelope != null) {
 			pitchModulationEnvelope.resetValues();
 			pitchModulationAmplitudeEnvelope.resetValues();
-			pitchModulationStep = (int) (((pitchModulationEnvelope.end - pitchModulationEnvelope.start) * 32.768000000000001D) / d);
+			pitchModulationStep = (int) (((pitchModulationEnvelope.end - pitchModulationEnvelope.start)
+					* 32.768000000000001D) / d);
 			pitchModulationBaseStep = (int) ((pitchModulationEnvelope.start * 32.768000000000001D) / d);
 		}
 		int volumeModulationStep = 0;
@@ -172,7 +161,8 @@ final class Instrument {
 		if (volumeModulationEnvelope != null) {
 			volumeModulationEnvelope.resetValues();
 			volumeModulationAmplitude.resetValues();
-			volumeModulationStep = (int) (((volumeModulationEnvelope.end - volumeModulationEnvelope.start) * 32.768000000000001D) / d);
+			volumeModulationStep = (int) (((volumeModulationEnvelope.end - volumeModulationEnvelope.start)
+					* 32.768000000000001D) / d);
 			volumeModulationBaseStep = (int) ((volumeModulationEnvelope.start * 32.768000000000001D) / d);
 		}
 		for (int oscillationVolumeId = 0; oscillationVolumeId < 5; oscillationVolumeId++)
@@ -180,9 +170,8 @@ final class Instrument {
 				phases[oscillationVolumeId] = 0;
 				delays[oscillationVolumeId] = (int) (oscillationDelay[oscillationVolumeId] * d);
 				volumeStep[oscillationVolumeId] = (oscillationVolume[oscillationVolumeId] << 14) / 100;
-				pitchStep[oscillationVolumeId] = (int) (((pitchEnvelope.end - pitchEnvelope.start) * 32.768000000000001D * Math
-						.pow(1.0057929410678534D,
-								oscillationPitch[oscillationVolumeId])) / d);
+				pitchStep[oscillationVolumeId] = (int) (((pitchEnvelope.end - pitchEnvelope.start) * 32.768000000000001D
+						* Math.pow(1.0057929410678534D, oscillationPitch[oscillationVolumeId])) / d);
 				pitchBaseStep[oscillationVolumeId] = (int) ((pitchEnvelope.start * 32.768000000000001D) / d);
 			}
 
@@ -191,32 +180,25 @@ final class Instrument {
 			int volumeChange = volumeEnvelope.step(steps);
 			if (pitchModulationEnvelope != null) {
 				int modulation = pitchModulationEnvelope.step(steps);
-				int modulationAmplitude = pitchModulationAmplitudeEnvelope
-						.step(steps);
-				pitchChange += evaluateWave(modulationAmplitude,
-						pitchModulationPhase, pitchModulationEnvelope.form) >> 1;
-				pitchModulationPhase += (modulation * pitchModulationStep >> 16)
-						+ pitchModulationBaseStep;
+				int modulationAmplitude = pitchModulationAmplitudeEnvelope.step(steps);
+				pitchChange += evaluateWave(modulationAmplitude, pitchModulationPhase,
+						pitchModulationEnvelope.form) >> 1;
+				pitchModulationPhase += (modulation * pitchModulationStep >> 16) + pitchModulationBaseStep;
 			}
 			if (volumeModulationEnvelope != null) {
 				int modulation = volumeModulationEnvelope.step(steps);
 				int modulationAmplitude = volumeModulationAmplitude.step(steps);
-				volumeChange = volumeChange
-						* ((evaluateWave(modulationAmplitude,
-								volumeModulationPhase,
-								volumeModulationEnvelope.form) >> 1) + 32768) >> 15;
-				volumeModulationPhase += (modulation * volumeModulationStep >> 16)
-						+ volumeModulationBaseStep;
+				volumeChange = volumeChange * ((evaluateWave(modulationAmplitude, volumeModulationPhase,
+						volumeModulationEnvelope.form) >> 1) + 32768) >> 15;
+				volumeModulationPhase += (modulation * volumeModulationStep >> 16) + volumeModulationBaseStep;
 			}
 			for (int oscillationId = 0; oscillationId < 5; oscillationId++)
 				if (oscillationVolume[oscillationId] != 0) {
 					int position = offset + delays[oscillationId];
 					if (position < steps) {
-						output[position] += evaluateWave(volumeChange
-								* volumeStep[oscillationId] >> 15,
+						output[position] += evaluateWave(volumeChange * volumeStep[oscillationId] >> 15,
 								phases[oscillationId], pitchEnvelope.form);
-						phases[oscillationId] += (pitchChange
-								* pitchStep[oscillationId] >> 16)
+						phases[oscillationId] += (pitchChange * pitchStep[oscillationId] >> 16)
 								+ pitchBaseStep[oscillationId];
 					}
 				}
@@ -234,12 +216,10 @@ final class Instrument {
 				int threshold;
 				if (muted)
 					threshold = gatingReleaseEnvelope.start
-							+ ((gatingReleaseEnvelope.end - gatingReleaseEnvelope.start)
-									* stepOn >> 8);
+							+ ((gatingReleaseEnvelope.end - gatingReleaseEnvelope.start) * stepOn >> 8);
 				else
 					threshold = gatingReleaseEnvelope.start
-							+ ((gatingReleaseEnvelope.end - gatingReleaseEnvelope.start)
-									* stepOff >> 8);
+							+ ((gatingReleaseEnvelope.end - gatingReleaseEnvelope.start) * stepOff >> 8);
 				if ((counter += 256) >= threshold) {
 					counter = 0;
 					muted = !muted;
@@ -266,15 +246,12 @@ final class Instrument {
 				if (delay > steps - M)
 					delay = steps - M;
 				for (; n < delay; n++) {
-					int y = (int) ((long) output[n + M]
-							* (long) SoundFilter.invUnity >> 16);
+					int y = (int) ((long) output[n + M] * (long) SoundFilter.invUnity >> 16);
 					for (int k8 = 0; k8 < M; k8++)
-						y += (int) ((long) output[(n + M) - 1 - k8]
-								* (long) SoundFilter.coefficient[0][k8] >> 16);
+						y += (int) ((long) output[(n + M) - 1 - k8] * (long) SoundFilter.coefficient[0][k8] >> 16);
 
 					for (int j9 = 0; j9 < n; j9++)
-						y -= (int) ((long) output[n - 1 - j9]
-								* (long) SoundFilter.coefficient[1][j9] >> 16);
+						y -= (int) ((long) output[n - 1 - j9] * (long) SoundFilter.coefficient[1][j9] >> 16);
 
 					output[n] = y;
 					t = filterEnvelope.step(steps + 1);
@@ -286,8 +263,7 @@ final class Instrument {
 					if (delay > steps - M)
 						delay = steps - M;
 					for (; n < delay; n++) {
-						int y = (int) ((long) output[n + M]
-								* (long) SoundFilter.invUnity >> 16);
+						int y = (int) ((long) output[n + M] * (long) SoundFilter.invUnity >> 16);
 						for (int position = 0; position < M; position++)
 							y += (int) ((long) output[(n + M) - 1 - position]
 									* (long) SoundFilter.coefficient[0][position] >> 16);
@@ -328,5 +304,21 @@ final class Instrument {
 		}
 
 		return output;
+	}
+
+	private int evaluateWave(int amplitude, int phase, int table) {
+		if (table == 1)
+			if ((phase & 0x7fff) < 16384)
+				return amplitude;
+			else
+				return -amplitude;
+		if (table == 2)
+			return sine[phase & 0x7fff] * amplitude >> 14;
+		if (table == 3)
+			return ((phase & 0x7fff) * amplitude >> 14) - amplitude;
+		if (table == 4)
+			return noise[phase / 2607 & 0x7fff] * amplitude;
+		else
+			return 0;
 	}
 }

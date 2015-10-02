@@ -20,12 +20,24 @@ package com.jagex.runescape;
  */
 
 import java.applet.Applet;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 @SuppressWarnings("serial")
-public class RSApplet extends Applet implements Runnable, MouseListener,
-		MouseMotionListener, KeyListener, FocusListener, WindowListener {
+public class RSApplet extends Applet
+		implements Runnable, MouseListener, MouseMotionListener, KeyListener, FocusListener, WindowListener {
 
 	private int gameState;
 
@@ -96,19 +108,6 @@ public class RSApplet extends Applet implements Runnable, MouseListener,
 		inputBuffer = new int[128];
 	}
 
-	void cleanUpForQuit() {
-	}
-
-	final void createClientFrame(int width, int height) {
-		this.width = width;
-		this.height = height;
-		gameFrame = new RSFrame(this, this.width, this.height);
-		gameGraphics = getGameComponent().getGraphics();
-		fullGameScreen = new RSImageProducer(this.width, height,
-				getGameComponent());
-		startRunnable(this, 1);
-	}
-
 	@Override
 	public final void destroy() {
 		gameState = -1;
@@ -118,58 +117,6 @@ public class RSApplet extends Applet implements Runnable, MouseListener,
 		}
 		if (gameState == -1)
 			exit();
-	}
-
-	void drawLoadingText(int percentage, String s) {
-		while (gameGraphics == null) {
-			gameGraphics = getGameComponent().getGraphics();
-			try {
-				getGameComponent().repaint();
-			} catch (Exception _ex) {
-			}
-			try {
-				Thread.sleep(1000L);
-			} catch (Exception _ex) {
-			}
-		}
-		Font helveticaBold = new Font("Helvetica", 1, 13);
-		FontMetrics fontmetrics = getGameComponent().getFontMetrics(
-				helveticaBold);
-		Font helvetica = new Font("Helvetica", 0, 13);
-		getGameComponent().getFontMetrics(helvetica);
-		if (clearScreen) {
-			gameGraphics.setColor(Color.black);
-			gameGraphics.fillRect(0, 0, width, height);
-			clearScreen = false;
-		}
-		Color color = new Color(140, 17, 17);
-		int centerHeight = height / 2 - 18;
-		gameGraphics.setColor(color);
-		gameGraphics.drawRect(width / 2 - 152, centerHeight, 304, 34);
-		gameGraphics.fillRect(width / 2 - 150, centerHeight + 2,
-				percentage * 3, 30);
-		gameGraphics.setColor(Color.black);
-		gameGraphics.fillRect((width / 2 - 150) + percentage * 3,
-				centerHeight + 2, 300 - percentage * 3, 30);
-		gameGraphics.setFont(helveticaBold);
-		gameGraphics.setColor(Color.white);
-		gameGraphics.drawString(s, (width - fontmetrics.stringWidth(s)) / 2,
-				centerHeight + 22);
-	}
-
-	private void exit() {
-		gameState = -2;
-		cleanUpForQuit();
-		if (gameFrame != null) {
-			try {
-				Thread.sleep(1000L);
-			} catch (Exception _ex) {
-			}
-			try {
-				System.exit(0);
-			} catch (Throwable _ex) {
-			}
-		}
 	}
 
 	@Override
@@ -185,22 +132,6 @@ public class RSApplet extends Applet implements Runnable, MouseListener,
 		for (int key = 0; key < 128; key++)
 			keyStatus[key] = 0;
 
-	}
-
-	Component getGameComponent() {
-		if (gameFrame != null)
-			return gameFrame;
-		else
-			return this;
-	}
-
-	final void initClientFrame(int width, int height) {
-		this.width = width;
-		this.height = height;
-		gameGraphics = getGameComponent().getGraphics();
-		fullGameScreen = new RSImageProducer(this.width, this.height,
-				getGameComponent());
-		startRunnable(this, 1);
 	}
 
 	@Override
@@ -246,6 +177,7 @@ public class RSApplet extends Applet implements Runnable, MouseListener,
 			writeIndex = writeIndex + 1 & 0x7f;
 		}
 	}
+
 	@Override
 	public final void keyReleased(KeyEvent keyevent) {
 		idleTime = 0;
@@ -274,12 +206,15 @@ public class RSApplet extends Applet implements Runnable, MouseListener,
 		if (keyChar > 0 && keyChar < '\200')
 			keyStatus[keyChar] = 0;
 	}
+
 	@Override
 	public final void keyTyped(KeyEvent keyevent) {
 	}
+
 	@Override
 	public final void mouseClicked(MouseEvent mouseevent) {
 	}
+
 	@Override
 	public final void mouseDragged(MouseEvent mouseevent) {
 		int x = mouseevent.getX();
@@ -292,15 +227,18 @@ public class RSApplet extends Applet implements Runnable, MouseListener,
 		mouseX = x;
 		mouseY = y;
 	}
+
 	@Override
 	public final void mouseEntered(MouseEvent mouseevent) {
 	}
+
 	@Override
 	public final void mouseExited(MouseEvent mouseevent) {
 		idleTime = 0;
 		mouseX = -1;
 		mouseY = -1;
 	}
+
 	@Override
 	public final void mouseMoved(MouseEvent mouseevent) {
 		int x = mouseevent.getX();
@@ -313,6 +251,7 @@ public class RSApplet extends Applet implements Runnable, MouseListener,
 		mouseX = x;
 		mouseY = y;
 	}
+
 	@Override
 	public final void mousePressed(MouseEvent mouseEvent) {
 		int x = mouseEvent.getX();
@@ -333,11 +272,13 @@ public class RSApplet extends Applet implements Runnable, MouseListener,
 			mouseButton = 1;
 		}
 	}
+
 	@Override
 	public final void mouseReleased(MouseEvent mouseevent) {
 		idleTime = 0;
 		mouseButton = 0;
 	}
+
 	@Override
 	public final void paint(Graphics g) {
 		if (gameGraphics == null)
@@ -345,20 +286,7 @@ public class RSApplet extends Applet implements Runnable, MouseListener,
 		clearScreen = true;
 		redraw();
 	}
-	void processDrawing() {
-	}
-	void processGameLoop() {
-	}
-	final int readCharacter() {
-		int character = -1;
-		if (writeIndex != readIndex) {
-			character = inputBuffer[readIndex];
-			readIndex = readIndex + 1 & 0x7f;
-		}
-		return character;
-	}
-	void redraw() {
-	}
+
 	@Override
 	public void run() {
 		getGameComponent().addMouseListener(this);
@@ -439,10 +367,8 @@ public class RSApplet extends Applet implements Runnable, MouseListener,
 					System.out.println("otim" + otim + ":" + otims[otim]);
 				}
 
-				System.out.println("fps:" + fps + " ratio:" + ratio + " count:"
-						+ count);
-				System.out.println("del:" + delay + " deltime:" + delayTime
-						+ " mindel:" + minDelay);
+				System.out.println("fps:" + fps + " ratio:" + ratio + " count:" + count);
+				System.out.println("del:" + delay + " deltime:" + delayTime + " mindel:" + minDelay);
 				System.out.println("intex:" + intex + " opos:" + opos);
 				debugRequested = false;
 				intex = 0;
@@ -451,26 +377,25 @@ public class RSApplet extends Applet implements Runnable, MouseListener,
 		if (gameState == -1)
 			exit();
 	}
-	final void setFrameRate(int frameRate) {
-		delayTime = 1000 / frameRate;
-	}
+
 	@Override
 	public final void start() {
 		if (gameState >= 0)
 			gameState = 0;
 	}
+
 	public void startRunnable(Runnable runnable, int priority) {
 		Thread thread = new Thread(runnable);
 		thread.start();
 		thread.setPriority(priority);
 	}
-	void startUp() {
-	}
+
 	@Override
 	public final void stop() {
 		if (gameState >= 0)
 			gameState = 4000 / delayTime;
 	}
+
 	@Override
 	public final void update(Graphics g) {
 		if (gameGraphics == null)
@@ -478,26 +403,133 @@ public class RSApplet extends Applet implements Runnable, MouseListener,
 		clearScreen = true;
 		redraw();
 	}
+
 	@Override
 	public final void windowActivated(WindowEvent windowevent) {
 	}
+
 	@Override
 	public final void windowClosed(WindowEvent windowevent) {
 	}
+
 	@Override
 	public final void windowClosing(WindowEvent windowevent) {
 		destroy();
 	}
+
 	@Override
 	public final void windowDeactivated(WindowEvent windowevent) {
 	}
+
 	@Override
 	public final void windowDeiconified(WindowEvent windowevent) {
 	}
+
 	@Override
 	public final void windowIconified(WindowEvent windowevent) {
 	}
+
 	@Override
 	public final void windowOpened(WindowEvent windowevent) {
+	}
+
+	private void exit() {
+		gameState = -2;
+		cleanUpForQuit();
+		if (gameFrame != null) {
+			try {
+				Thread.sleep(1000L);
+			} catch (Exception _ex) {
+			}
+			try {
+				System.exit(0);
+			} catch (Throwable _ex) {
+			}
+		}
+	}
+
+	void cleanUpForQuit() {
+	}
+
+	final void createClientFrame(int width, int height) {
+		this.width = width;
+		this.height = height;
+		gameFrame = new RSFrame(this, this.width, this.height);
+		gameGraphics = getGameComponent().getGraphics();
+		fullGameScreen = new RSImageProducer(this.width, height, getGameComponent());
+		startRunnable(this, 1);
+	}
+
+	void drawLoadingText(int percentage, String s) {
+		while (gameGraphics == null) {
+			gameGraphics = getGameComponent().getGraphics();
+			try {
+				getGameComponent().repaint();
+			} catch (Exception _ex) {
+			}
+			try {
+				Thread.sleep(1000L);
+			} catch (Exception _ex) {
+			}
+		}
+		Font helveticaBold = new Font("Helvetica", 1, 13);
+		FontMetrics fontmetrics = getGameComponent().getFontMetrics(helveticaBold);
+		Font helvetica = new Font("Helvetica", 0, 13);
+		getGameComponent().getFontMetrics(helvetica);
+		if (clearScreen) {
+			gameGraphics.setColor(Color.black);
+			gameGraphics.fillRect(0, 0, width, height);
+			clearScreen = false;
+		}
+		Color color = new Color(140, 17, 17);
+		int centerHeight = height / 2 - 18;
+		gameGraphics.setColor(color);
+		gameGraphics.drawRect(width / 2 - 152, centerHeight, 304, 34);
+		gameGraphics.fillRect(width / 2 - 150, centerHeight + 2, percentage * 3, 30);
+		gameGraphics.setColor(Color.black);
+		gameGraphics.fillRect((width / 2 - 150) + percentage * 3, centerHeight + 2, 300 - percentage * 3, 30);
+		gameGraphics.setFont(helveticaBold);
+		gameGraphics.setColor(Color.white);
+		gameGraphics.drawString(s, (width - fontmetrics.stringWidth(s)) / 2, centerHeight + 22);
+	}
+
+	Component getGameComponent() {
+		if (gameFrame != null)
+			return gameFrame;
+		else
+			return this;
+	}
+
+	final void initClientFrame(int width, int height) {
+		this.width = width;
+		this.height = height;
+		gameGraphics = getGameComponent().getGraphics();
+		fullGameScreen = new RSImageProducer(this.width, this.height, getGameComponent());
+		startRunnable(this, 1);
+	}
+
+	void processDrawing() {
+	}
+
+	void processGameLoop() {
+	}
+
+	final int readCharacter() {
+		int character = -1;
+		if (writeIndex != readIndex) {
+			character = inputBuffer[readIndex];
+			readIndex = readIndex + 1 & 0x7f;
+		}
+		return character;
+	}
+
+	void redraw() {
+	}
+
+	final void setFrameRate(int frameRate) {
+		delayTime = 1000 / frameRate;
+	}
+
+	void startUp() {
 	}
 }

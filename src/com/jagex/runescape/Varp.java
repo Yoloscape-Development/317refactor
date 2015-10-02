@@ -21,6 +21,19 @@ package com.jagex.runescape;
 
 public final class Varp {
 
+	public static Varp cache[];
+
+	private static int anInt702;
+
+	private static int[] anIntArray703;
+
+	public int type;
+	public boolean aBoolean713;
+
+	private Varp() {
+		aBoolean713 = false;
+	}
+
 	public static void load(Archive archive) {
 		Buffer stream = new Buffer(archive.decompressFile("varp.dat"));
 		anInt702 = 0;
@@ -38,16 +51,6 @@ public final class Varp {
 			System.out.println("varptype load mismatch");
 	}
 
-	public static Varp cache[];
-
-	private static int anInt702;
-
-	private static int[] anIntArray703;
-	public int type;
-	public boolean aBoolean713;
-	private Varp() {
-		aBoolean713 = false;
-	}
 	private void readValues(Buffer stream, int i) {
 		do {
 			int opcode = stream.getUnsignedByte();

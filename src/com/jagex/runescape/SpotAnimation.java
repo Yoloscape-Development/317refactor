@@ -21,21 +21,9 @@ package com.jagex.runescape;
 
 public final class SpotAnimation {
 
-	public static void load(Archive archive) {
-		Buffer buffer = new Buffer(archive.decompressFile("spotanim.dat"));
-		int count = buffer.getUnsignedLEShort();
-		if (cache == null)
-			cache = new SpotAnimation[count];
-		for (int anim = 0; anim < count; anim++) {
-			if (cache[anim] == null)
-				cache[anim] = new SpotAnimation();
-			cache[anim].id = anim;
-			cache[anim].read(buffer);
-		}
-
-	}
-
 	public static SpotAnimation cache[];
+
+	public static LinkedList modelCache = new LinkedList(30);
 
 	private int id;
 
@@ -50,8 +38,7 @@ public final class SpotAnimation {
 	public int rotation;
 	public int modelLightFalloff;
 	public int modelLightAmbient;
-	public static LinkedList modelCache = new LinkedList(30);
-	
+
 	private SpotAnimation() {
 		animationId = -1;
 		originalModelColours = new int[6];
@@ -59,7 +46,21 @@ public final class SpotAnimation {
 		scaleXY = 128;
 		scaleZ = 128;
 	}
-	
+
+	public static void load(Archive archive) {
+		Buffer buffer = new Buffer(archive.decompressFile("spotanim.dat"));
+		int count = buffer.getUnsignedLEShort();
+		if (cache == null)
+			cache = new SpotAnimation[count];
+		for (int anim = 0; anim < count; anim++) {
+			if (cache[anim] == null)
+				cache[anim] = new SpotAnimation();
+			cache[anim].id = anim;
+			cache[anim].read(buffer);
+		}
+
+	}
+
 	public Model getModel() {
 		Model model = (Model) modelCache.get(id);
 		if (model != null)
@@ -69,13 +70,12 @@ public final class SpotAnimation {
 			return null;
 		for (int colour = 0; colour < 6; colour++)
 			if (originalModelColours[0] != 0)
-				model.recolour(originalModelColours[colour],
-						modifiedModelColours[colour]);
+				model.recolour(originalModelColours[colour], modifiedModelColours[colour]);
 
 		modelCache.put(model, id);
 		return model;
 	}
-	
+
 	private void read(Buffer stream) {
 		do {
 			int attribute = stream.getUnsignedByte();
@@ -98,14 +98,11 @@ public final class SpotAnimation {
 			else if (attribute == 8)
 				modelLightAmbient = stream.getUnsignedByte();
 			else if (attribute >= 40 && attribute < 50)
-				originalModelColours[attribute - 40] = stream
-						.getUnsignedLEShort();
+				originalModelColours[attribute - 40] = stream.getUnsignedLEShort();
 			else if (attribute >= 50 && attribute < 60)
-				modifiedModelColours[attribute - 50] = stream
-						.getUnsignedLEShort();
+				modifiedModelColours[attribute - 50] = stream.getUnsignedLEShort();
 			else
-				System.out.println("Error unrecognised spotanim config code: "
-						+ attribute);
+				System.out.println("Error unrecognised spotanim config code: " + attribute);
 		} while (true);
 	}
 }

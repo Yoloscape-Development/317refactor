@@ -38,15 +38,6 @@ final class Deque {
 		return count;
 	}
 
-	public void push(QueueLink l) {
-		if (l.nextNodeSub != null)
-			l.unlist();
-		l.nextNodeSub = head.nextNodeSub;
-		l.prevNodeSub = head;
-		l.nextNodeSub.prevNodeSub = l;
-		l.prevNodeSub.nextNodeSub = l;
-	}
-
 	public QueueLink pull() {
 		QueueLink l = head.prevNodeSub;
 		if (l == head) {
@@ -55,6 +46,15 @@ final class Deque {
 			l.unlist();
 			return l;
 		}
+	}
+
+	public void push(QueueLink l) {
+		if (l.nextNodeSub != null)
+			l.unlist();
+		l.nextNodeSub = head.nextNodeSub;
+		l.prevNodeSub = head;
+		l.nextNodeSub.prevNodeSub = l;
+		l.prevNodeSub.nextNodeSub = l;
 	}
 
 	public QueueLink reverseGetFirst() {
@@ -67,6 +67,7 @@ final class Deque {
 			return nodeSub;
 		}
 	}
+
 	public QueueLink reverseGetNext() {
 		QueueLink nodeSub = current;
 		if (nodeSub == head) {

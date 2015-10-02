@@ -21,6 +21,38 @@ package com.jagex.runescape;
 
 public final class AnimationSequence {
 
+	public static AnimationSequence animations[];
+
+	public int frameCount;
+
+	public int frame2Ids[];
+
+	public int frame1Ids[];
+
+	private int[] frameLengths;
+	public int frameStep;
+	public int flowControl[];
+	public boolean dynamic;
+	public int priority;
+	public int playerReplacementShield;
+	public int playerReplacementWeapon;
+	public int maximumLoops;
+	public int precedenceAnimating;
+	public int precedenceWalking;
+	public int replayMode;
+
+	private AnimationSequence() {
+		frameStep = -1;
+		dynamic = false;
+		priority = 5;
+		playerReplacementShield = -1;
+		playerReplacementWeapon = -1;
+		maximumLoops = 99;
+		precedenceAnimating = -1;
+		precedenceWalking = -1;
+		replayMode = 2;
+	}
+
 	public static void unpackConfig(Archive streamLoader) {
 		Buffer stream = new Buffer(streamLoader.decompressFile("seq.dat"));
 		int length = stream.getUnsignedLEShort();
@@ -33,35 +65,6 @@ public final class AnimationSequence {
 		}
 	}
 
-	public static AnimationSequence animations[];
-
-	public int frameCount;
-
-	public int frame2Ids[];
-
-	public int frame1Ids[];
-	private int[] frameLengths;
-	public int frameStep;
-	public int flowControl[];
-	public boolean dynamic;
-	public int priority;
-	public int playerReplacementShield;
-	public int playerReplacementWeapon;
-	public int maximumLoops;
-	public int precedenceAnimating;
-	public int precedenceWalking;
-	public int replayMode;
-	private AnimationSequence() {
-		frameStep = -1;
-		dynamic = false;
-		priority = 5;
-		playerReplacementShield = -1;
-		playerReplacementWeapon = -1;
-		maximumLoops = 99;
-		precedenceAnimating = -1;
-		precedenceWalking = -1;
-		replayMode = 2;
-	}
 	public int getFrameLength(int frame) {
 		int frameLength = frameLengths[frame];
 		if (frameLength == 0) {
@@ -73,6 +76,7 @@ public final class AnimationSequence {
 			frameLength = 1;
 		return frameLength;
 	}
+
 	private void readValues(Buffer stream) {
 		do {
 			int attribute = stream.getUnsignedByte();
@@ -127,8 +131,7 @@ public final class AnimationSequence {
 			else if (attribute == 12)
 				stream.getInt();
 			else
-				System.out.println("Error unrecognised seq config code: "
-						+ attribute);
+				System.out.println("Error unrecognised seq config code: " + attribute);
 		} while (true);
 		if (frameCount == 0) {
 			frameCount = 1;

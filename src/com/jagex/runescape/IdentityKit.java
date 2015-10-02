@@ -21,18 +21,6 @@ package com.jagex.runescape;
 
 public final class IdentityKit {
 
-	public static void load(Archive streamLoader) {
-		Buffer stream = new Buffer(streamLoader.decompressFile("idk.dat"));
-		count = stream.getUnsignedLEShort();
-		if (cache == null)
-			cache = new IdentityKit[count];
-		for (int kit = 0; kit < count; kit++) {
-			if (cache[kit] == null)
-				cache[kit] = new IdentityKit();
-			cache[kit].loadDefinition(stream);
-		}
-	}
-
 	public static int count;
 
 	public static IdentityKit cache[];
@@ -46,13 +34,28 @@ public final class IdentityKit {
 	private final int[] modifiedModelColours;
 
 	private final int[] headModelIds = { -1, -1, -1, -1, -1 };
+
 	public boolean widgetDisplayed;
+
 	private IdentityKit() {
 		partId = -1;
 		originalModelColours = new int[6];
 		modifiedModelColours = new int[6];
 		widgetDisplayed = false;
 	}
+
+	public static void load(Archive streamLoader) {
+		Buffer stream = new Buffer(streamLoader.decompressFile("idk.dat"));
+		count = stream.getUnsignedLEShort();
+		if (cache == null)
+			cache = new IdentityKit[count];
+		for (int kit = 0; kit < count; kit++) {
+			if (cache[kit] == null)
+				cache[kit] = new IdentityKit();
+			cache[kit].loadDefinition(stream);
+		}
+	}
+
 	public boolean bodyModelCached() {
 		if (modelIds == null)
 			return true;
@@ -63,6 +66,7 @@ public final class IdentityKit {
 
 		return cached;
 	}
+
 	public Model getBodyModel() {
 		if (modelIds == null)
 			return null;
@@ -78,12 +82,12 @@ public final class IdentityKit {
 		for (int colour = 0; colour < 6; colour++) {
 			if (originalModelColours[colour] == 0)
 				break;
-			model.recolour(originalModelColours[colour],
-					modifiedModelColours[colour]);
+			model.recolour(originalModelColours[colour], modifiedModelColours[colour]);
 		}
 
 		return model;
 	}
+
 	public Model getHeadModel() {
 		Model models[] = new Model[5];
 		int modelCount = 0;
@@ -95,12 +99,12 @@ public final class IdentityKit {
 		for (int colour = 0; colour < 6; colour++) {
 			if (originalModelColours[colour] == 0)
 				break;
-			model.recolour(originalModelColours[colour],
-					modifiedModelColours[colour]);
+			model.recolour(originalModelColours[colour], modifiedModelColours[colour]);
 		}
 
 		return model;
 	}
+
 	public boolean headModelCached() {
 		boolean cached = true;
 		for (int m = 0; m < 5; m++)
@@ -109,6 +113,7 @@ public final class IdentityKit {
 
 		return cached;
 	}
+
 	private void loadDefinition(Buffer stream) {
 		do {
 			int attribute = stream.getUnsignedByte();
@@ -126,16 +131,13 @@ public final class IdentityKit {
 			} else if (attribute == 3)
 				widgetDisplayed = true;
 			else if (attribute >= 40 && attribute < 50)
-				originalModelColours[attribute - 40] = stream
-						.getUnsignedLEShort();
+				originalModelColours[attribute - 40] = stream.getUnsignedLEShort();
 			else if (attribute >= 50 && attribute < 60)
-				modifiedModelColours[attribute - 50] = stream
-						.getUnsignedLEShort();
+				modifiedModelColours[attribute - 50] = stream.getUnsignedLEShort();
 			else if (attribute >= 60 && attribute < 70)
 				headModelIds[attribute - 60] = stream.getUnsignedLEShort();
 			else
-				System.out.println("Error unrecognised config code: "
-						+ attribute);
+				System.out.println("Error unrecognised config code: " + attribute);
 		} while (true);
 	}
 }
