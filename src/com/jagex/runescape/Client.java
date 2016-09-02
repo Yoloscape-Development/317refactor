@@ -359,7 +359,7 @@ public final class Client extends RSApplet {
 	private int playerEnergy;
 	private boolean continuedDialogue;
 	private Sprite[] crosses;
-	private boolean musicEnabled;
+	private boolean musicEnabled = true;
 	private Background[] flameRuneImage;
 	private boolean redrawTab;
 	private int unreadMessages;
@@ -635,7 +635,7 @@ public final class Client extends RSApplet {
 			portOffset = args.length >= 2 ? Integer.parseInt(args[1]) : 0;
 			
 			if (args.length >= 3 && args[2].equalsIgnoreCase("lowmem"))
-				setLowMemory();
+				setHighMem();
 			if (args.length >= 3 && args[2].equalsIgnoreCase("highmem"))
 				setHighMem();
 			
@@ -880,7 +880,7 @@ public final class Client extends RSApplet {
 		portOffset = Integer.parseInt(getParameter("portoff"));
 		String lowMemory = getParameter("lowmem");
 		if (lowMemory != null && lowMemory.equals("1"))
-			setLowMemory();
+			setHighMem();
 		else
 			setHighMem();
 		String freeWorld = getParameter("free");
